@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.ericsson.nms</groupId>
+		<artifactId>integration</artifactId>
+		<version>15.2.0.20</version>
+	</parent>
+
+	<groupId>com.ericsson.nms.mediation.component</groupId>
+	<artifactId>eftp-component</artifactId>
+	<description>Ericsson custom ftp camel component</description>
+	<version>2.9.200-SNAPSHOT</version>
+	<packaging>jar</packaging>
+	<name>${project.parent.artifactId}</name>
+
+
+	<!-- Project properties -->
+	<properties>
+		<!-- mocking frameworks version -->
+		<version.mockito>1.9.0</version.mockito>
+		<!-- apache sshd version -->
+		<version.apache.sshd>0.7.0</version.apache.sshd>
+		<!-- jsch version -->
+		<!-- Ftp server for testing -->
+		<version.ftp.server>1.0.6</version.ftp.server>
+		<!-- mediation-sdk version -->
+		<version.mediation.sdk>1.9.2.17</version.mediation.sdk>
+		<!-- common engine services  -->
+		<version.camel-engine-jca-commons>1.4.20</version.camel-engine-jca-commons>
+	</properties>
+
+	<profiles>
+		<profile>
+			<id>update_versions</id>
+			<activation>
+				<property>
+					<name>updateVersions</name>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>versions-maven-plugin</artifactId>
+						<version>2.0</version>
+						<executions>
+							<execution>
+								<id>use-latest-releases</id>
+								<phase>validate</phase>
+								<goals>
+									<goal>use-latest-releases</goal>
+								</goals>
+							</execution>
+							<execution>
+								<phase>validate</phase>
+								<id>update-properties</id>
+								<goals>
+									<goal>update-properties</goal>
+								</goals>
+								<inherited>false</inherited>
+							</execution>
+						</executions>
+						<configuration>
+							<allowMajorUpdates>true</allowMajorUpdates>
+							<allowMinorUpdates>true</allowMinorUpdates>
+							<allowIncrementalUpdates>true</allowIncrementalUpdates>
+							<generateBackupPoms>false</generateBackupPoms>
+							<excludesList>*:*</excludesList>
+							<includes>
+								<include>com.ericsson.nms.mediation:mediation-sdk-bom:pom</include>
+								<include>com.ericsson.nms.mediation:camel-engine-jca-common</include>
+							</includes>
+							<includeProperties>version.camel-engine-jca-commons,version.mediation.sdk</includeProperties>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>run-integration-test</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<excludes>
+								<exclude>NONE</exclude>
+							</excludes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
+
+	<dependencyManagement>
+		<dependencies>
+			<!-- mediation-sdk dependency, brings in camel version -->
+			<dependency>
+				<groupId>com.ericsson.nms.mediation</groupId>
+				<artifactId>mediation-sdk-bom</artifactId>
+				<version>${version.mediation.sdk}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.mockito</groupId>
+				<artifactId>mockito-all</artifactId>
+				<version>${version.mockito}</version>
+				<type>jar</type>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.sshd</groupId>
+				<artifactId>sshd-core</artifactId>
+				<version>${version.apache.sshd}</version>
+				<type>jar</type>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.ftpserver</groupId>
+				<artifactId>ftpserver-core</artifactId>
+				<version>${version.ftp.server}</version>
+				<type>jar</type>
+			</dependency>
+			<dependency>
+				<groupId>com.ericsson.nms.mediation</groupId>
+				<artifactId>camel-engine-jca-common</artifactId>
+				<version>${version.camel-engine-jca-commons}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<!-- Compile scope dependencies -->
+		<dependency>
+			<groupId>com.ericsson.nms.mediation</groupId>
+			<artifactId>camel-engine-jca-common</artifactId>
+		</dependency>
+		<!-- Provided scope dependencies -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-core</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<!-- Testing dependencies -->
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.sshd</groupId>
+			<artifactId>sshd-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.ftpserver</groupId>
+			<artifactId>ftpserver-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
+					only. It has no influence on the Maven build itself. -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.apache.maven.plugins
+										</groupId>
+										<artifactId>
+											maven-dependency-plugin
+										</artifactId>
+										<versionRange>
+											[2.4,)
+										</versionRange>
+										<goals>
+											<goal>analyze-dep-mgt</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore />
+									</action>
+								</pluginExecution>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											com.ericsson.maven.plugins
+										</groupId>
+										<artifactId>
+											rstate-maven-plugin
+										</artifactId>
+										<versionRange>
+											[1.0,)
+										</versionRange>
+										<goals>
+											<goal>rstate</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore />
+									</action>
+								</pluginExecution>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.codehaus.mojo
+										</groupId>
+										<artifactId>
+											versions-maven-plugin
+										</artifactId>
+										<versionRange>
+											[2.0,)
+										</versionRange>
+										<goals>
+											<goal>
+												update-properties
+											</goal>
+											<goal>
+												use-latest-releases
+											</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore />
+									</action>
+								</pluginExecution>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.apache.maven.plugins
+										</groupId>
+										<artifactId>
+											maven-enforcer-plugin
+										</artifactId>
+										<versionRange>
+											[1.1.1,)
+										</versionRange>
+										<goals>
+											<goal>enforce</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore />
+									</action>
+								</pluginExecution>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.codehaus.mojo
+										</groupId>
+										<artifactId>
+											build-helper-maven-plugin
+										</artifactId>
+										<versionRange>
+											[1.7,)
+										</versionRange>
+										<goals>
+											<goal>regex-property</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore />
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+		<!-- The EftpComponent includes integration tests which startup FTP and 
+			SSH servers as part of the test, permissions problems prevent these tests 
+			running in the Jenkins environment, so they are disabled by default. To run 
+			these integration tests locally activate the run-integration-test profile -->
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>**/EftpFtpIntegrationTest.java</exclude>
+						<exclude>**/EftpSshIntegrationTest.java</exclude>
+						<exclude>**/EftpSshSoakTest.java</exclude>
+						<exclude>**/EftpJSchIntegrationTest.java</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>cobertura-maven-plugin</artifactId>
+				<configuration>
+					<formats>
+						<format>xml</format>
+					</formats>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
